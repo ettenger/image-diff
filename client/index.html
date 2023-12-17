@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>Diff Checker</title>
+    <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+  </head>
+  <body>
+    <form
+      hx-encoding="multipart/form-data"
+      hx-post="http://localhost:8000/check-diff/"
+      hx-target="#result"
+      _="on htmx:xhr:progress(loaded, total) set #progress.value to (loaded/total)*100"
+    >
+      <input type="file" name="reference_image" />
+      <input type="file" name="given_image" />
+      <button>Upload</button>
+      <progress id="progress" value="0" max="100"></progress>
+    </form>
+    <div id="result"></div>
+  </body>
+</html>

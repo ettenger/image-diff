@@ -57,17 +57,3 @@ def find_diff(reference_image_file: SpooledTemporaryFile, given_image_file: Spoo
         return diffs
     else:
         print("No transformation found; images are too dissimilar.")
-
-
-# File paths for the reference and given images
-reference_image_path = "./Spot_the_difference.png"
-given_image_path = "./Spot_the_difference2.png"
-
-with SpooledTemporaryFile(mode="w+b", max_size=500) as sp_file:
-    sp_file.write(open(reference_image_path, "rb").read())
-    sp_file.seek(0)
-    with SpooledTemporaryFile(mode="w+b", max_size=500) as sp_file2:
-        sp_file2.write(open(given_image_path, "rb").read())
-        sp_file2.seek(0)
-        diffs = find_diff(sp_file, sp_file2)
-        print(diffs)
