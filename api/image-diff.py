@@ -1,21 +1,11 @@
+from tempfile import SpooledTemporaryFile
 import cv2
-import os
 import numpy as np
 
-# File paths for the reference and given images
-reference_image_path = "./Spot_the_difference.png"
-given_image_path = "./Spot_the_difference2.png"
-PURPLE = (139,0,139)
-GREEN = (0,255,0)
-
-# Check if both image files exist
-if not os.path.exists(reference_image_path) or not os.path.exists(given_image_path):
-    print("One or both image files do not exist.")
-else:
-    # Load the reference and given images
-    reference_image = cv2.imread(reference_image_path)
-    given_image = cv2.imread(given_image_path)
-
+def find_diff(reference_image_file: SpooledTemporaryFile, given_image_file: SpooledTemporaryFile):
+    reference_image = cv2.imdecode(np.frombuffer(reference_image_file.read(), np.uint8), cv2.IMREAD_UNCHANGED)
+    given_image = cv2.imdecode(np.frombuffer(given_image_file.read(), np.uint8), cv2.IMREAD_UNCHANGED)
+    
     # Convert images to grayscale for feature matching
     reference_gray = cv2.cvtColor(reference_image, cv2.COLOR_BGR2GRAY)
     given_gray = cv2.cvtColor(given_image, cv2.COLOR_BGR2GRAY)
@@ -56,17 +46,28 @@ else:
         # Find contours of the differences
         contours, _ = cv2.findContours(thresholded, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
+        diffs = []
+
         # Draw rectangles around the detected differences
         for idx, contour in enumerate(contours):
             if cv2.contourArea(contour) > 20:
                 x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(given_image, (x, y), (x + w, y + h), PURPLE, 2)
-                cv2.putText(given_image, str(idx + 1), (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, GREEN, 2)
-                print("Change detected at ({}, {})".format(x, y))
+                diffs.append({"i": idx, "x0": x, "y0": y, "x1": x + w, "y0": y+ h})
 
-        # Display the given image with detected changes
-        cv2.imshow("Change Detected", given_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        return diffs
     else:
         print("No transformation found; images are too dissimilar.")
+
+
+# File paths for the reference and given images
+reference_image_path = "./Spot_the_difference.png"
+given_image_path = "./Spot_the_difference2.png"
+
+with SpooledTemporaryFile(mode="w+b", max_size=500) as sp_file:
+    sp_file.write(open(reference_image_path, "rb").read())
+    sp_file.seek(0)
+    with SpooledTemporaryFile(mode="w+b", max_size=500) as sp_file2:
+        sp_file2.write(open(given_image_path, "rb").read())
+        sp_file2.seek(0)
+        diffs = find_diff(sp_file, sp_file2)
+        print(diffs)
