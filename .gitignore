@@ -1,2 +1,4 @@
 .DS_Store
 api/__pycache__
+client/.svelte-kit
+client/node_modules
